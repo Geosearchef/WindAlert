@@ -39,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
 				generateData();
 			}
 		}).start();
+
+		AlarmSetup.register(this.getApplicationContext());
 	}
 
 
