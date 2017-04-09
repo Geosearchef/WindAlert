@@ -60,6 +60,9 @@ public class MainActivity extends AppCompatActivity {
 				displayString.append(getFormattedDate(date) + ":   " + getFormattedWindSpeed(windSpeed) + " km/h" + "\n");
 			}
 
+			if(displayString.length() > 0)
+				displayString.deleteCharAt(displayString.length() - 1);
+
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
