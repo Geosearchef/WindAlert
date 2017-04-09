@@ -14,5 +14,8 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"/>
+        android:text="Loading..."
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        android:id="@+id/textView"/>
 </RelativeLayout>
