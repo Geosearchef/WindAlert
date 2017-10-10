@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				generateData(MainActivity.this, MainActivity.this);
+				generateData(MainActivity.this);
 			}
 		}).start();
 
@@ -46,10 +46,10 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 
-	public static void generateData(Context context, Activity activity) {
+	public static void generateData(Activity activity) {
 
 		final StringBuilder displayString = new StringBuilder();
-		data = getWeatherData(context);
+		data = getWeatherData(activity);
 
 		try {
 			JSONArray list = data.getJSONArray("list");
@@ -87,18 +87,18 @@ public class MainActivity extends AppCompatActivity {
 		return res.substring(0, res.length() - 3);
 	}
 
-	private static String getFormattedWindSpeed(float speed) {
+	public static String getFormattedWindSpeed(float speed) {
 		return String.format("%.1f", speed);
 	}
 
 	/**
 	 * @return The wind speed in km/h
 	 */
-	private static float getWindSpeed(JSONObject weatherEntry) throws JSONException {
+	public static float getWindSpeed(JSONObject weatherEntry) throws JSONException {
 		return Float.parseFloat(weatherEntry.getJSONObject("wind").getString("speed")) * 3.6f;
 	}
 
-	private static JSONObject getWeatherData(Context context) {
+	public static JSONObject getWeatherData(Context context) {
 		try {
 			return new JSONObject(get("http://api.openweathermap.org/data/2.5/forecast?id=" + CITY_ID + "&APPID=" + context.getResources().getString(R.string.api_key), context));
 		} catch (JSONException e) {

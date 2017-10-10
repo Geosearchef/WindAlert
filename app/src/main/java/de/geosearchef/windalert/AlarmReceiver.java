@@ -20,8 +20,13 @@ import android.support.annotation.Nullable;
 import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.widget.Toast;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.io.IOException;
 import java.sql.SQLOutput;
+import java.util.Date;
 
 /**
  * Created by Geosearchef on 09.04.2017.
@@ -36,18 +41,56 @@ public class AlarmReceiver extends IntentService {
 	
 	@Override
 	protected void onHandleIntent(@Nullable Intent intent) {
-		Handler mHandler = new Handler(getMainLooper());
-		mHandler.post(new Runnable() {
-			@Override
-			public void run() {
-				Toast.makeText(getApplicationContext(), "Checking wind...", Toast.LENGTH_SHORT).show();
-			}
-		});
 		System.out.println("Checking wind...");
+
+		//Get wind data
+		JSONObject data = MainActivity.getWeatherData(this);
+
+		try {
+			JSONArray list = data.getJSONArray("list");
+
+			Date beginningDate = null;
+			float maxSpeedOverLimit = 0f;
+
+			Date endingDate = null;
+			search:
+			for(int i = 0;i < list.length();i++) {
+				JSONObject entry = list.getJSONObject(i);
+
+				Date date = new Date(entry.getLong("dt") * 1000L);
+				float windSpeed = MainActivity.getWindSpeed(entry);
+
+				if(windSpeed < 16f) {
+					if(maxSpeedOverLimit != 0f) {
+						endingDate = date;
+						break search;
+					}
+
+					beginningDate = null;
+				}
+
+				if(windSpeed >= 16f && beginningDate == null) {
+					beginningDate = date;
+				}
+
+				if(windSpeed >= 21f) {
+					maxSpeedOverLimit = Math.max(maxSpeedOverLimit, windSpeed);
+				}
+			}
+
+			if(maxSpeedOverLimit != 0f) {
+				showWarningNotification(MainActivity.getFormattedWindSpeed(maxSpeedOverLimit) + " km/h:   " + beginningDate.getDate() + "." + (beginningDate.getMonth() + 1) + ". " + beginningDate.getHours() + " Uhr  -  " + endingDate.getDate() + "." + (endingDate.getMonth() + 1) + ". " + endingDate.getHours() + " Uhr");
+			}
+
+		} catch(JSONException e) {
+			e.printStackTrace();
+		}
 		
-		// prepare intent which is triggered if the
-		// notification is selected
 		
+		scheduleNextUpdate();
+	}
+
+	private void showWarningNotification(String warning) {
 		Intent i = new Intent(this, MainActivity.class);
 		PendingIntent pIntent = PendingIntent.getActivity(this, 0, i, 0);
 
@@ -55,20 +98,17 @@ public class AlarmReceiver extends IntentService {
 		// the addAction re-use the same intent to keep the example short
 		Notification n = new Notification.Builder(this)
 				.setContentTitle("Wind warning")
-				.setContentText("Strong winds on --- at ---.")
+				.setContentText(warning)
 				.setContentIntent(pIntent)
 				.setSmallIcon(R.drawable.wind)
 				.setAutoCancel(true)
 				.build();
-		
-		
+
+
 		NotificationManager notificationManager =
 				(NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-		
-		//notificationManager.notify(0, n);
-		
-		
-		scheduleNextUpdate();
+
+		notificationManager.notify(0, n);
 	}
 	
 	private void scheduleNextUpdate() {
@@ -83,7 +123,7 @@ public class AlarmReceiver extends IntentService {
 	
 	@Override
 	public void onCreate() {
-		Toast.makeText(this, "WindAlert active!", Toast.LENGTH_LONG).show();
+//		Toast.makeText(this, "WindAlert active!", Toast.LENGTH_LONG).show();
 		super.onCreate();
 	}
 	
