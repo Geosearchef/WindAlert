@@ -1,5 +1,7 @@
 package de.geosearchef.windalert;
 
+import android.app.Activity;
+import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
@@ -21,10 +23,10 @@ import java.util.Scanner;
 
 public class MainActivity extends AppCompatActivity {
 
-	private final String CITY_ID = "3220838";
-	private JSONObject data;
+	private static final String CITY_ID = "3220838";
+	private static JSONObject data;
 
-	private TextView textView;
+	private static TextView textView;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				generateData();
+				generateData(MainActivity.this, MainActivity.this);
 			}
 		}).start();
 
@@ -44,10 +46,10 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 
-	public void generateData() {
+	public static void generateData(Context context, Activity activity) {
 
 		final StringBuilder displayString = new StringBuilder();
-		data = getWeatherData();
+		data = getWeatherData(context);
 
 		try {
 			JSONArray list = data.getJSONArray("list");
@@ -65,12 +67,14 @@ public class MainActivity extends AppCompatActivity {
 			if(displayString.length() > 0)
 				displayString.deleteCharAt(displayString.length() - 1);
 
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					textView.setText(displayString);
-				}
-			});
+			if(textView != null && activity != null) {
+				activity.runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						textView.setText(displayString);
+					}
+				});
+			}
 
 			System.out.println(displayString);
 		} catch(JSONException e) {
@@ -78,32 +82,32 @@ public class MainActivity extends AppCompatActivity {
 		}
 	}
 
-	private String getFormattedDate(Date date) {
+	private static String getFormattedDate(Date date) {
 		String res = date.toLocaleString();
 		return res.substring(0, res.length() - 3);
 	}
 
-	private String getFormattedWindSpeed(float speed) {
+	private static String getFormattedWindSpeed(float speed) {
 		return String.format("%.1f", speed);
 	}
 
 	/**
 	 * @return The wind speed in km/h
 	 */
-	private float getWindSpeed(JSONObject weatherEntry) throws JSONException {
+	private static float getWindSpeed(JSONObject weatherEntry) throws JSONException {
 		return Float.parseFloat(weatherEntry.getJSONObject("wind").getString("speed")) * 3.6f;
 	}
 
-	private JSONObject getWeatherData() {
+	private static JSONObject getWeatherData(Context context) {
 		try {
-			return new JSONObject(get("http://api.openweathermap.org/data/2.5/forecast?id=" + CITY_ID + "&APPID=" + getResources().getString(R.string.api_key)));
+			return new JSONObject(get("http://api.openweathermap.org/data/2.5/forecast?id=" + CITY_ID + "&APPID=" + context.getResources().getString(R.string.api_key), context));
 		} catch (JSONException e) {
 			e.printStackTrace();
 			return null;
 		}
 	}
 
-	private String get(String url) {
+	private static String get(String url, Context context) {
 		try {
 			HttpClient client = HttpClientBuilder.create().build();
 
@@ -119,7 +123,9 @@ public class MainActivity extends AppCompatActivity {
 			}
 			return res.toString();
 		} catch(IOException e) {
-			Toast.makeText(this, "Error while requesting weather data!", Toast.LENGTH_LONG).show();
+			if(context != null) {
+				Toast.makeText(context, "Error while requesting weather data!", Toast.LENGTH_LONG).show();
+			}
 			e.printStackTrace();
 			return null;
 		}

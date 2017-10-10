@@ -3,7 +3,7 @@
           package="de.geosearchef.windalert">
 
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
@@ -20,15 +20,13 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name=".AlarmReceiver" >
-        </receiver>
-
-        <receiver android:name=".AlarmSetup"
-                  android:enabled="true">
+        <receiver android:name="de.geosearchef.windalert.AlarmSetup">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <service android:name="de.geosearchef.windalert.AlarmReceiver" />
     </application>
 
 </manifest>
